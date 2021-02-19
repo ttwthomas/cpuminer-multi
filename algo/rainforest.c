@@ -228,7 +228,7 @@ static void aes2r_encrypt(uint8_t * state, uint8_t * key) {
 }
 
 // this seems necessary only for gcc, otherwise hash is bogus
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 typedef unsigned long ulong;
 typedef uint8_t  rf_u8;
 typedef uint16_t rf_u16;

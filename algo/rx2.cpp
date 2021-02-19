@@ -73,7 +73,6 @@ static void init_dataset(int thr_id, uint256 theseed)
 	if (rdx_secure)
 		flags |= RANDOMX_FLAG_SECURE;
 
-
 	randomx_cpu_cache = randomx_alloc_cache(flags);
 	if (randomx_cpu_cache == NULL) {
 		applog(LOG_ERR, "Cache allocation failed");
@@ -86,14 +85,14 @@ static void init_dataset(int thr_id, uint256 theseed)
 	}
 
 	// make sure all the threads are ran on different cpu thread
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
 	cpu_set_t cpuset;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 #endif
 	for (int i = 0; i < num_cpus; ++i) {
 		dataset_threads[i].id = i;
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 		pthread_create(&dataset_threads[i].thr, NULL, dataset_init_cpu_thr, (void*)&dataset_threads[i].id);
 #else
 		CPU_ZERO(&cpuset);
