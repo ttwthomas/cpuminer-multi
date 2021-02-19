@@ -313,7 +313,7 @@ static size_t upload_data_cb(void *ptr, size_t size, size_t nmemb,
 static int seek_data_cb(void *user_data, curl_off_t offset, int origin)
 {
 	struct upload_buffer *ub = (struct upload_buffer *) user_data;
-	
+
 	switch (origin) {
 	case SEEK_SET:
 		ub->pos = (size_t) offset;
@@ -886,7 +886,7 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
 {
 	int i;
 	bool rc = true;
-	
+
 	for (i = 7; i >= 0; i--) {
 		if (hash[i] > target[i]) {
 			rc = false;
@@ -901,7 +901,7 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
 	if (opt_debug) {
 		uint32_t hash_be[8], target_be[8];
 		char hash_str[65], target_str[65];
-		
+
 		for (i = 0; i < 8; i++) {
 			be32enc(hash_be + i, hash[7 - i]);
 			be32enc(target_be + i, target[7 - i]);
@@ -923,7 +923,7 @@ void diff_to_target(uint32_t *target, double diff)
 {
 	uint64_t m;
 	int k;
-	
+
 	for (k = 6; k > 0 && diff > 1.0; k--)
 		diff /= 4294967296.0;
 	m = (uint64_t)(4294901760.0 / diff);
@@ -1682,18 +1682,19 @@ static uint32_t getblocheight(struct stratum_ctx *sctx)
 static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 {
 	char algo[64] = { 0 };
-	const char *job_id, *prevhash, *coinb1, *coinb2, *version, *nbits, *ntime;
+	const char *job_id, *prevhash, *coinb1, *coinb2, *version, *nbits, *ntime, *seed;
 	const char *extradata = NULL;
 	size_t coinb1_size, coinb2_size;
 	bool clean, ret = false;
 	int merkle_count, i, p=0;
-	bool has_claim, has_roots;
+	bool has_claim, has_roots, has_seed;
 	json_t *merkle_arr;
 	uchar **merkle;
 
 	get_currentalgo(algo, sizeof(algo));
-	has_claim = strcmp(algo, "lbry") == 0 && json_array_size(params) == 10;
-	has_roots = strcmp(algo, "phi2") == 0 && json_array_size(params) == 10;
+	has_seed = (strcmp(algo, "rx2") == 0);
+	has_claim = (strcmp(algo, "lbry") == 0 && json_array_size(params) == 10);
+	has_roots = (strcmp(algo, "phi2") == 0 && json_array_size(params) == 10) || has_seed;
 
 	job_id = json_string_value(json_array_get(params, p++));
 	prevhash = json_string_value(json_array_get(params, p++));
@@ -1710,6 +1711,7 @@ static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 			applog(LOG_ERR, "Stratum notify: invalid UTXO root parameter");
 			goto out;
 		}
+
 	}
 	coinb1 = json_string_value(json_array_get(params, p++));
 	coinb2 = json_string_value(json_array_get(params, p++));
@@ -1720,6 +1722,14 @@ static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 	version = json_string_value(json_array_get(params, p++));
 	nbits = json_string_value(json_array_get(params, p++));
 	ntime = json_string_value(json_array_get(params, p++));
+	if (has_seed) {
+		seed = json_string_value(json_array_get(params, p++));
+		if (strlen(seed) != 64) {
+			applog(LOG_ERR, "Stratum notify: invalid seed parameter");
+			goto out;
+		}
+		hex2bin(sctx->job.seed, seed, 32);
+	}
 	clean = json_is_true(json_array_get(params, p));
 
 	if (!job_id || !prevhash || !coinb1 || !coinb2 || !version || !nbits || !ntime ||
@@ -2027,7 +2037,7 @@ static bool stratum_get_version(struct stratum_ctx *sctx, json_t *id)
 	char *s;
 	json_t *val;
 	bool ret;
-	
+
 	if (!id || json_is_null(id))
 		return false;
 
@@ -2052,7 +2062,7 @@ static bool stratum_show_message(struct stratum_ctx *sctx, json_t *id, json_t *p
 	val = json_array_get(params, 0);
 	if (val)
 		applog(LOG_NOTICE, "MESSAGE FROM SERVER: %s", json_string_value(val));
-	
+
 	if (!id || json_is_null(id))
 		return true;
 
@@ -2432,6 +2442,10 @@ void print_hash_tests(void)
 
 	rf256_hash(&hash[0], &buf[0], 80);
 	printpfx("rainforest", hash);
+
+	//rx2_hash(&hash[0], &buf[0]);
+	memset(&hash[0], 0, sizeof(hash));
+	printpfx("rx2", hash);
 
 	scrypthash(&hash[0], &buf[0], 1024);
 	printpfx("scrypt", hash);

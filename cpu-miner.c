@@ -113,6 +113,7 @@ enum algos {
 	ALGO_PLUCK,       /* Pluck (Supcoin) */
 	ALGO_QUBIT,       /* Qubit */
 	ALGO_RAINFOREST,  /* RainForest */
+	ALGO_RX2,         /* RandomX (Lux) */
 	ALGO_SCRYPT,      /* scrypt */
 	ALGO_SCRYPTJANE,  /* Chacha */
 	ALGO_SHAVITE3,    /* Shavite3 */
@@ -182,6 +183,7 @@ static const char *algo_names[] = {
 	"pluck",
 	"qubit",
 	"rainforest",
+	"rx2",
 	"scrypt",
 	"scrypt-jane",
 	"shavite3",
@@ -231,6 +233,21 @@ bool opt_stratum_stats = false;
 bool allow_mininginfo = true;
 bool use_syslog = false;
 bool use_colors = true;
+
+// randomx flags and default value
+bool rdx_large_page = false;
+bool rdx_full_mem = true;
+bool rdx_jit = false;
+bool rdx_argon = false;
+bool rdx_argon_avx2 = true;
+bool rdx_argon_ssse3 = false;
+bool rdx_secure = false;
+#if defined(_MSC_VER)
+bool rdx_hard_aes = true;
+#else
+bool rdx_hard_aes = false;
+#endif
+
 static bool opt_background = false;
 bool opt_quiet = false;
 int opt_maxlograte = 5;
@@ -345,11 +362,12 @@ Options:\n\
                           nist5        Nist5\n\
                           pluck        Pluck:128 (Supcoin)\n\
                           pentablake   Pentablake\n\
-                          phi          LUX initial algo\n\
-                          phi2         LUX newer algo\n\
+                          phi          First Lux algo\n\
+                          phi2         Lyra based algo\n\
                           quark        Quark\n\
                           qubit        Qubit\n\
                           rainforest   RainForest (256)\n\
+                          rx2          RandomX2\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
                           scrypt:N     scrypt(N, 1, 1)\n\
                           scrypt-jane:N (with N factor from 4 to 30)\n\
@@ -408,7 +426,15 @@ Options:\n\
       --no-color        disable colored output\n\
   -D, --debug           enable debug output\n\
   -P, --protocol-dump   verbose dump of protocol-level activities\n\
-      --hide-diff       Hide submitted block and net difficulty\n"
+      --hide-diff       Hide submitted block and net difficulty\n\
+      --rdx-large-page  enable randomx flag RANDOMX_FLAG_LARGE_PAGES (true or false)\n\
+      --rdx-full-mem    enable randomx flag RANDOMX_FLAG_FULL_MEM (true or false)\n\
+      --rdx-hard-aes    enable randomx flag RANDOMX_FLAG_HARD_AES (true or false)\n\
+      --rdx-jit         enable randomx flag RANDOMX_FLAG_JIT (true or false)\n\
+      --rdx-argon-avx2  enable randomx flag RANDOMX_FLAG_ARGON2_AVX2 (true or false)\n\
+      --rdx-argon-ssse3 enable randomx flag RANDOMX_FLAG_ARGON2_SSSE3 (true or false)\n\
+      --rdx-argon       enable randomx flag RANDOMX_FLAG_ARGON2 (true or false)\n\
+      --rdx-secure      enable randomx flag RANDOMX_FLAG_SECURE(true or false)\n"
 #ifdef HAVE_SYSLOG_H
 "\
   -S, --syslog          use system log for output messages\n"
@@ -477,6 +503,14 @@ static struct option const options[] = {
 	{ "show-diff", 0, NULL, 1013 },
 	{ "hide-diff", 0, NULL, 1014 },
 	{ "max-log-rate", 1, NULL, 1019 },
+	{ "rdx-large-page",1, NULL, 2000 },
+	{ "rdx-full-mem", 1, NULL, 2001 },
+	{ "rdx-hard-aes", 1, NULL, 2002 },
+	{ "rdx-jit", 1, NULL, 2003 },
+	{ "rdx-argon-avx2", 1, NULL, 2004 },
+	{ "rdx-argon-ssse3", 1, NULL, 2005 },
+	{ "rdx-argon", 1, NULL, 2006 },
+	{ "rdx-secure", 1, NULL, 2007 },
 #ifdef HAVE_SYSLOG_H
 	{ "syslog", 0, NULL, 'S' },
 #endif
@@ -682,7 +716,7 @@ static bool work_decode(const json_t *val, struct work *work)
 				algo_names[opt_algo], work->height, netinfo);
 			net_blocks = work->height - 1;
 		}
-	} else if (opt_algo == ALGO_PHI2) {
+	} else if (opt_algo == ALGO_PHI2 || opt_algo == ALGO_RX2) {
 		if (work->data[0] & (1<<30)) use_roots = true;
 		else for (i = 20; i < 36; i++) {
 			if (work->data[i]) { use_roots = true; break; }
@@ -1326,7 +1360,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		} else if (opt_algo == ALGO_DECRED) {
 			/* bigger data size : 180 + terminal hash ending */
 			data_size = 192;
-		} else if (opt_algo == ALGO_PHI2 && use_roots) {
+		} else if (use_roots && (opt_algo == ALGO_PHI2 || opt_algo == ALGO_RX2)) {
 			data_size = 144;
 		}
 
@@ -1802,7 +1836,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			work->data[25] = le32dec(sctx->job.ntime);
 			work->data[26] = le32dec(sctx->job.nbits);
 			work->data[28] = 0x80000000;
-		} else if (opt_algo == ALGO_PHI2) {
+		} else if (opt_algo == ALGO_PHI2 || opt_algo == ALGO_RX2) {
 			work->data[17] = le32dec(sctx->job.ntime);
 			work->data[18] = le32dec(sctx->job.nbits);
 			for (i = 0; i < 16; i++)
@@ -1864,6 +1898,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_LYRA2REV2:
 			case ALGO_LYRA2V3:
 			case ALGO_PHI2:
+			case ALGO_RX2:
 			case ALGO_TIMETRAVEL:
 			case ALGO_BITCORE:
 			case ALGO_XEVAN:
@@ -2192,6 +2227,9 @@ static void *miner_thread(void *userdata)
 			case ALGO_YESCRYPT:
 				max64 = 0x1ff;
 				break;
+			case ALGO_RX2:
+				max64 = 0xff;
+				break;
 			case ALGO_ALLIUM:
 			case ALGO_LYRA2:
 			case ALGO_LYRA2REV2:
@@ -2356,6 +2394,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_PHI2:
 			rc = scanhash_phi2(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_RX2:
+			rc = scanhash_rx2(thr_id, &work, stratum.job.seed, max_nonce, &hashes_done);
 			break;
 		case ALGO_PLUCK:
 			rc = scanhash_pluck(thr_id,  &work, max_nonce, &hashes_done, scratchbuf, opt_pluck_n);
@@ -3305,6 +3346,54 @@ void parse_arg(int key, char *arg)
 	case 1024:
 		opt_randomize = true;
 		break;
+	case 2000:
+		if (!strncasecmp(arg, "true", 4))
+			rdx_large_page = true;
+		else if (!strncasecmp(arg, "false", 5))
+			rdx_large_page = false;
+		break;
+	case 2001:
+		if (!strncasecmp(arg, "true", 4))
+			rdx_full_mem = true;
+		else if (!strncasecmp(arg, "false", 5))
+			rdx_full_mem = false;
+		break;
+	case 2002:
+		if (!strncasecmp(arg, "true", 4))
+			rdx_hard_aes = true;
+		else if (!strncasecmp(arg, "false", 5))
+			rdx_hard_aes = false;
+		break;
+	case 2003:
+		if (!strncasecmp(arg, "true", 4))
+			rdx_jit = true;
+		else if (!strncasecmp(arg, "false", 5))
+			rdx_jit = false;
+		break;
+	case 2004:
+		if (!strncasecmp(arg, "true", 4))
+			rdx_argon_avx2 = true;
+		else if (!strncasecmp(arg, "false", 5))
+			rdx_argon_avx2 = false;
+		break;
+	case 2005:
+		if (!strncasecmp(arg, "true", 4))
+			rdx_argon_ssse3 = true;
+		else if (!strncasecmp(arg, "false", 5))
+			rdx_argon_ssse3 = false;
+		break;
+	case 2006:
+		if (!strncasecmp(arg, "true", 4))
+			rdx_argon = true;
+		else if (!strncasecmp(arg, "false", 5))
+			rdx_argon = false;
+		break;
+	case 2007:
+		if (!strncasecmp(arg, "true", 4))
+			rdx_secure = true;
+		else if (!strncasecmp(arg, "false", 5))
+			rdx_secure = false;
+		break;
 	case 'V':
 		show_version_and_exit();
 	case 'h':
@@ -3473,7 +3562,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (!opt_n_threads)
-		opt_n_threads = num_cpus;
+		opt_n_threads = num_cpus * 4 / 6;
 	if (!opt_n_threads)
 		opt_n_threads = 1;
 
@@ -3657,6 +3746,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* start mining threads */
+	if (opt_algo == ALGO_RX2) {
+		randomx_init_barrier(opt_n_threads);
+	}
+
 	for (i = 0; i < opt_n_threads; i++) {
 		thr = &thr_info[i];
 

@@ -29,6 +29,7 @@
 #include <sys/time.h>
 
 #include <pthread.h>
+//#include <bosjansson.h>
 #include <jansson.h>
 #include <curl/curl.h>
 
@@ -233,8 +234,13 @@ int scanhash_pluck(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *
 					unsigned char *scratchbuf, int N);
 int scanhash_quark(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 void init_quarkhash_contexts();
+
 int scanhash_qubit(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_rf256(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
+
+int scanhash_rx2(int thr_id, struct work* work, const unsigned char* seedhash, uint32_t max_nonce, uint64_t* hashes_done);
+void randomx_init_barrier(const int opt_n_threads);
+
 int scanhash_sha256d(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 unsigned char *scrypt_buffer_alloc(int N);
 int scanhash_scrypt(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done,
@@ -333,6 +339,14 @@ extern uint64_t global_hashrate;
 extern double stratum_diff;
 extern double net_diff;
 extern double net_hashrate;
+extern bool rdx_large_page;
+extern bool rdx_full_mem;
+extern bool rdx_hard_aes;
+extern bool rdx_jit;
+extern bool rdx_argon_avx2;
+extern bool rdx_argon_ssse3;
+extern bool rdx_argon;
+extern bool rdx_secure;
 
 #define JSON_RPC_LONGPOLL	(1 << 0)
 #define JSON_RPC_QUIET_404	(1 << 1)
@@ -428,6 +442,7 @@ struct stratum_job {
 	unsigned char extra[64]; // like lbry claimtrie
 	bool clean;
 	double diff;
+	unsigned char seed[32];
 };
 
 struct stratum_ctx {

@@ -276,6 +276,9 @@
     <ClCompile Include="algo\rainforest.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\rx2.cpp">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\s3.c">
       <Filter>algo</Filter>
     </ClCompile>
@@ -368,6 +371,18 @@
     </ClCompile>
     <ClCompile Include="algo\yescrypt.c">
       <Filter>algo</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomX\src\dataset.cpp">
+      <Filter>RandomX</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomX\src\randomx.cpp">
+      <Filter>RandomX</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomX\src\allocator.cpp">
+      <Filter>RandomX</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomX\src\virtual_memory.cpp">
+      <Filter>RandomX</Filter>
     </ClCompile>
     <ClCompile Include="yescrypt\yescrypt-common.c">
       <Filter>yescrypt</Filter>
@@ -581,6 +596,120 @@
     <ClInclude Include="res\resource.h">
       <Filter>res</Filter>
     </ClInclude>
+    <ClInclude Include="RandomX\src\soft_aes.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\reciprocal.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\randomx.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\intrin_portable.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\configuration.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\argon2_core.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\argon2.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\vm_interpreted_light.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\vm_interpreted.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\vm_compiled_light.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\vm_compiled.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\virtual_memory.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\virtual_machine.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\superscalar_program.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\superscalar.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\program.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\jit_compiler_x86_static.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\jit_compiler_x86.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\jit_compiler_fallback.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\jit_compiler_a64_static.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\jit_compiler_a64.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\jit_compiler.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\instruction_weights.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\instruction.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\dataset.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\cpu.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\common.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\bytecode_machine.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\blake2_generator.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\assembly_generator_x86.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\allocator.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\aes_hash.hpp">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\blake2\blake2.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\blake2\blake2-impl.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\blake2\blamka-round-avx2.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\blake2\blamka-round-ref.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\blake2\blamka-round-ssse3.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomX\src\blake2\endian.h">
+      <Filter>RandomX</Filter>
+    </ClInclude>
     <ClInclude Include="yescrypt\sha256_Y.h">
       <Filter>yescrypt</Filter>
     </ClInclude>
@@ -630,6 +759,9 @@
     </Filter>
     <Filter Include="res">
       <UniqueIdentifier>{5969f6d8-98c0-49c9-8e4c-51c54b5f0e16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RandomX">
+      <UniqueIdentifier>{efb99fe3-20cf-40ec-b098-f6b352b3840a}</UniqueIdentifier>
     </Filter>
     <Filter Include="yescrypt">
       <UniqueIdentifier>{678c0f76-3cd5-418b-bc6b-84a10d81f789}</UniqueIdentifier>
