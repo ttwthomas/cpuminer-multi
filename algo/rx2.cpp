@@ -13,13 +13,13 @@ extern "C" {
 }
 #endif
 
-#define MAXCPU 32
-//#define num_cpus 1
-static int is_init[MAXCPU];
-static uint256 randomx_seed[MAXCPU];
+#define MIN(a, b) ((a) < (b) ? a : b)
 
-static randomx_vm* rx_vm[MAXCPU];
-static randomx_cache* small_cache[MAXCPU];
+static int is_init[MAX_CPUS];
+static uint256 randomx_seed[MAX_CPUS];
+
+static randomx_vm* rx_vm[MAX_CPUS];
+static randomx_cache* small_cache[MAX_CPUS];
 
 static randomx_flags flags;
 static randomx_cache *randomx_cpu_cache;
@@ -128,7 +128,6 @@ int scanhash_rx2(int thr_id, struct work* work, const unsigned char* seedhash, u
 		if (i >= 20 && pdata[i]) has_roots = true;
 	}
 	uint8_t endian[32];
-	//uint8_t TheSeed[32];
 	for (int i=0; i<32; i++)
 		endian[31-i]=seedhash[i];
 
